@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>모바일 웹 바코드 인식 Demo - SECRETCODE</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/bootstrap.js"></script>
+</head>
+
+<body style="height: 100vh">
+<div class="container d-flex flex-column align-content-center justify-content-center">
+    <div class="rounded-3 bg-black m-auto mt-5 mb-5">
+        <h1 class="title m-2" style="color:yellow">SECRETCODE</h1>
+    </div>
+    <div class="mb-5">
+        <p class="fs-6">
+            이 예제는 ZXing Web라이브러리를 통해, 모바일 브라우저에서 카메라를 통해 바코드 인식을 테스트 하는 예제입니다.
+        </p>
+    </div>
+    <div>
+        <div class="card">
+            <video id="video" style="width: 90vw;height:auto"></video>
+            <div class="card-body">
+                <div id="sourceSelectPanel" style="display:none">
+                    <label for="sourceSelect">카메라 선택</label>
+                    <select id="sourceSelect" style="max-width:400px">
+                    </select>
+                </div>
+                <div>
+                    <label>인식 결과 <code id="result"></code></label>
+                </div>
+            </div>
+
+            <div class="m-1 d-flex flex-row justify-content-end" style="display: flex;padding: 3px;background: #eeeeee">
+                <a class="btn btn-secondary mx-1" id="resetButton">초기화</a>
+                <a class="btn btn-primary" id="startButton">인식하기</a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+<script type="text/javascript" src="js/zxing.js"></script>
+<script type="text/javascript">
+    // VConsole will be exported to `window.VConsole` by default.
+    const vConsole = new window.VConsole();
+
+    window.addEventListener('load', function () {
+        let selectedDeviceId;
+        const codeReader = new ZXing.BrowserBarcodeReader()
+        console.log('ZXing code reader initialized')
+        codeReader.getVideoInputDevices()
+            .then((videoInputDevices) => {
+                const sourceSelect = document.getElementById('sourceSelect')
+                selectedDeviceId = videoInputDevices[0].deviceId
+                if (videoInputDevices.length > 1) {
+                    videoInputDevices.forEach((element) => {
+                        const sourceOption = document.createElement('option')
+                        sourceOption.text = element.label
+                        sourceOption.value = element.deviceId
+                        sourceSelect.appendChild(sourceOption)
+                    })
+
+                    sourceSelect.onchange = () => {
+                        selectedDeviceId = sourceSelect.value;
+                    }
+
+                    const sourceSelectPanel = document.getElementById('sourceSelectPanel')
+                    sourceSelectPanel.style.display = 'block'
+                }
+
+                document.getElementById('startButton').addEventListener('click', () => {
+
+                    codeReader.decodeOnceFromVideoDevice(selectedDeviceId, 'video').then((result) => {
+                        console.log(result)
+                        document.getElementById('result').textContent = result.text
+                    }).catch((err) => {
+                        console.error(err)
+                        document.getElementById('result').textContent = err
+                    })
+                    console.log(`Started continous decode from camera with id ${selectedDeviceId}`)
+                })
+
+                document.getElementById('resetButton').addEventListener('click', () => {
+                    document.getElementById('result').textContent = '';
+                    codeReader.reset();
+                    console.log('Reset.')
+                })
+
+            })
+            .catch((err) => {
+                console.error(err)
+            })
+    })
+</script>
+
+</body>
+
+</html>
